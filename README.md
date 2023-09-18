@@ -25,8 +25,10 @@ $ pip install -r requirements.txt
 
 # SCHEMA AND DATABASE
 We are using the Milkis.db as an sqlite database with the following tables:
+
 Inventory:
-+----+--------------+-------+-----------------+----------+
 | ID | Product Name | Price | Product Company | Quantity |
-+----+--------------+-------+-----------------+----------+
+
+Transactions:
+| Transaction ID | Product ID | Transaction Date | Price | Quantity |
 
