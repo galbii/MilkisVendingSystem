@@ -2,7 +2,7 @@ from .model import Product
 import sqlite3
 
 class VendingMachine:
-    def __init__(self, db_file = 'vendingmachine.db'):
+    def __init__(self, db_file = 'milkis.db'):
         self.slots = {}  # A dictionary to represent the vending machine slots (slot_name: product)
         self.db_file = db_file
         self.connection = sqlite3.connect(db_file)

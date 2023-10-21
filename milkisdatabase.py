@@ -5,7 +5,7 @@ MILKIS VENDING MACHINE DATABASE INTERACTION CODE
 """
 
 from pydantic import BaseModel
-from model import Product
+from model import Item
 import sqlite3
 from prettytable import PrettyTable
 
@@ -18,9 +18,9 @@ cursor = conn.cursor()
 cursor.execute('''
     CREATE TABLE IF NOT EXISTS inventory (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        product_name TEXT NOT NULL UNIQUE,
+        item_name TEXT NOT NULL UNIQUE,
         price REAL NOT NULL,
-        product_company TEXT DEFAULT NULL,
+        item_company TEXT DEFAULT NULL,
         quantity INTEGER DEFAULT 0
     )
 ''')
@@ -29,79 +29,79 @@ cursor.execute('''
 cursor.execute('''
 CREATE TABLE IF NOT EXISTS orderhistory (
     transaction_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    product_id INTEGER,
+    item_id INTEGER,
     transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     cost REAL NOT NULL,
     quantity INTEGER NOT NULL,
-    FOREIGN KEY (product_id) REFERENCES inventory(id)
+    FOREIGN KEY (item_id) REFERENCES inventory(id)
 )
 ''')
 
 conn.commit()
 
 ###INVENTORY TABLE OPERATIONS###
-def create_product(product: Product):
-    #Creates a new unique product in the database
+def create_item(item: Item):
+    #Creates a new unique item in the database
 
     cursor.execute('''
-        INSERT INTO inventory (product_name, price, product_company, quantity)
+        INSERT INTO inventory (item_name, price, item_company, quantity)
         VALUES (?, ?, ?, ?)
-    ''', (product.product_name, product.price, product.product_company, product.quantity))
+    ''', (item.item_name, item.price, item.item_company, item.quantity))
     conn.commit()
 
-def get_products():
-    #Returns a list of all products in the database
+def get_items():
+    #Returns a list of all items in the database
 
-    cursor.execute('SELECT id, product_name, price, product_company, quantity FROM inventory')
-    products = cursor.fetchall()
-    return products
+    cursor.execute('SELECT id, item_name, price, item_company, quantity FROM inventory')
+    items = cursor.fetchall()
+    return items
 
-def get_product(product_id: int):
-    #Function to return a single product with the product_id identifier
+def get_item(item_id: int):
+    #Function to return a single item with the item_id identifier
 
-    cursor.execute('SELECT product_name, price FROM inventory WHERE id = ?', (product_id,))
-    product = cursor.fetchone()
-    return product
+    cursor.execute('SELECT item_name, price FROM inventory WHERE id = ?', (item_id,))
+    item = cursor.fetchone()
+    return item
 
-def update_product(product_id: int, product: Product):
-    #Pass a new product object to update the product at the location of the product id in the database
+def update_item(item_id: int, item: Item):
+    #Pass a new item object to update the item at the location of the item id in the database
 
     cursor.execute('''
         UPDATE inventory
-        SET product_name = ?, price = ?
+        SET item_name = ?, price = ?
         WHERE id = ?
-    ''', (product.product_name, product.price, product_id))
+    ''', (item.item_name, item.price, item_id))
     conn.commit()
-    return product
+    return item
 
 def add_quantity(item_name: str, quantity_to_add: int = 1):
     #modify the item in the database to add some integer quantity
     #wil mainly be used when putting in orders
 
-    cursor.execute("UPDATE inventory SET quantity = quantity + ? WHERE product_name = ?", (quantity_to_add, item_name))
+    cursor.execute("UPDATE inventory SET quantity = quantity + ? WHERE item_name = ?", (quantity_to_add, item_name))
     conn.commit()
     return True
 
-def delete_productID(product_id: int):
-    #Delete a product by ID from the database
+def delete_itemID(item_id: int):
+    #Delete a item by ID from the database
 
-    cursor.execute('DELETE FROM inventory WHERE id = ?', (product_id,))
+    cursor.execute('DELETE FROM inventory WHERE id = ?', (item_id,))
     conn.commit()
-    return {"message": "Product deleted"}
+    return {"message": "Item deleted"}
 
-def delete_productname(product_name: str):
-    # Check if the product exists in the database
-    cursor.execute('SELECT COUNT(*) FROM inventory WHERE product_name = ?', (product_name,))
+def delete_itemname(item_name: str):
+    # Check if the item exists in the database
+    cursor.execute('SELECT COUNT(*) FROM inventory WHERE item_name = ?', (item_name,))
     count = cursor.fetchone()[0]
 
     if count == 0:
-        return {"message": "Product not found"}
+        return {"message": "Item not found"}
 
-    # Delete the product from the database
-    cursor.execute('DELETE FROM inventory WHERE product_name = ?', (product_name,))
+    # Delete the item from the database
+    cursor.execute('DELETE FROM inventory WHERE item_name = ?', (item_name,))
     conn.commit()
     
-    return {"message": "Product deleted"}
+    return {"message": "Item deleted"}
 
 def display_inventory_table():
     # Display the entire inventory as a table
@@ -109,17 +109,17 @@ def display_inventory_table():
     try:
         # Execute a SELECT query to retrieve all entries from the inventory table
         cursor.execute('SELECT * FROM inventory')
-        products = cursor.fetchall()
+        items = cursor.fetchall()
 
-        if not products:
-            return {"message": "No products found in the inventory"}
+        if not items:
+            return {"message": "No items found in the inventory"}
 
         # Create a PrettyTable to display the inventory
         table = PrettyTable()
-        table.field_names = ["ID", "Product Name", "Price", "Product Company", "Quantity"]
+        table.field_names = ["ID", "Item Name", "Price", "Item Company", "Quantity"]
 
-        for product in products:
-            table.add_row(product)
+        for item in items:
+            table.add_row(item)
 
         return {"message": "Inventory:", "table": table.get_string()}
 
@@ -134,35 +134,35 @@ def shutdown_event():
 
 
 ###TRANSACTION TABLE OPERATIONS###
-def order(product_id: int, qty: int):
-    #orders a quantity of the product and creates an entry in the order history table
+def order(item_id: int, qty: int):
+    #orders a quantity of the item and creates an entry in the order history table
 
     try:
-        # Find the product in the inventory and get its current quantity
-        cursor.execute('SELECT product_name, quantity, price FROM inventory WHERE id = ?', (product_id,))
-        product_info = cursor.fetchone()
+        # Find the item in the inventory and get its current quantity
+        cursor.execute('SELECT item_name, quantity, price FROM inventory WHERE id = ?', (item_id,))
+        item_info = cursor.fetchone()
 
-        if product_info is None:
-            return {"message": "Product not found"}
+        if item_info is None:
+            return {"message": "Item not found"}
 
-        product_name, current_quantity, product_price = product_info
+        item_name, current_quantity, item_price = item_info
 
         # Calculate the new quantity after adding qty
         new_quantity = current_quantity + qty
-        cost = product_price * qty
+        cost = item_price * qty
 
         # Update the quantity in the inventory table
-        add_quantity(product_name, qty)
+        add_quantity(item_name, qty)
 
-        #cursor.execute('UPDATE inventory SET quantity = ? WHERE id = ?', (new_quantity, product_id))
+        #cursor.execute('UPDATE inventory SET quantity = ? WHERE id = ?', (new_quantity, item_id))
         conn.commit()
 
         # Insert a new row into the orderhistory table
-        cursor.execute('INSERT INTO orderhistory (product_id, cost, quantity) VALUES (?, ?, ?)',
-                       (product_id, cost, qty))  # You need to specify the actual price and price_per_product values
+        cursor.execute('INSERT INTO orderhistory (item_id, cost, quantity) VALUES (?, ?, ?)',
+                       (item_id, cost, qty))  # You need to specify the actual price and price_per_item values
         conn.commit()
 
-        return {"message": f"Ordered {qty} {product_name}(s)"}
+        return {"message": f"Ordered {qty} {item_name}(s)"}
 
     except sqlite3.Error as e:
         return {"message": f"Error: {e}"}
@@ -200,7 +200,7 @@ def display_transaction_table():
 
         # Create a PrettyTable to display the transactions
         table = PrettyTable()
-        table.field_names = ["Transaction ID", "Product ID", "Transaction Date", "Price", "Quantity"]
+        table.field_names = ["Transaction ID", "Item ID", "Transaction Date", "Price", "Quantity"]
 
         for transaction in transactions:
             table.add_row(transaction)
@@ -213,11 +213,13 @@ def display_transaction_table():
 
 ###TESTING
 
-product = Product.create_basic(product_name = "candy", price=0.99) 
-product2 = Product.create_basic(product_name = "chips", price = 1.99)
+item = Item.create_basic(item_name = "candy", price=0.99) 
+item2 = Item.create_basic(item_name = "chips", price = 1.99)
+
+create_item(item2)
 
 
-print(get_products())
+print(get_items())
 
 order(3, 30)
 
