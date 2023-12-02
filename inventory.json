@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "item_name": "candy",
+    "price": 0.99,
+    "quantity": 120
+  },
+  {
+    "id": 2,
+    "item_name": "chips",
+    "price": 1.99,
+    "quantity": 60
+  },
+  {
+    "id": 3,
+    "item_name": "turtle",
+    "price": 10.99,
+    "quantity": 21
+  },
+  {
+    "id": 4,
+    "item_name": "yeet",
+    "price": 30.99,
+    "quantity": 20
+  }
+]

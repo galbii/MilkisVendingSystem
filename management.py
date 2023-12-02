@@ -1,7 +1,0 @@
-"""
-MILKIS VENDING MACHINE MANAGEMENT API
-
-FUNCTIONALITY:
-    1. manage inventory table
-
-"""

@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from model import Item
 import sqlite3
 from prettytable import PrettyTable
+import json
 
 DB_FILE = 'milkis.db'
 
@@ -126,6 +127,18 @@ def display_inventory_table():
     except sqlite3.Error as e:
         return {"message": f"Error: {e}"}
 
+def exportjson():
+    cursor.execute('SELECT id, item_name, price, quantity FROM inventory')
+    rows = cursor.fetchall()
+
+    data = []
+    for row in rows:
+        data.append(dict(zip([description[0] for description in cursor.description], row)))
+
+    # Write the data to a JSON file
+    with open('inventory.json', 'w') as json_file:
+        json.dump(data, json_file, indent=2)
+
 
 def shutdown_event():
     conn.close()
@@ -213,29 +226,29 @@ def display_transaction_table():
 
 ###TESTING
 
-item = Item.create_basic(item_name = "candy", price=0.99) 
-item2 = Item.create_basic(item_name = "chips", price = 1.99)
-
-create_item(item2)
-
-
-print(get_items())
-
-order(3, 30)
-
-# Example usage:
-inventory = display_inventory_table()
-if "table" in inventory:
-    print(inventory["message"])
-    print(inventory["table"])
-else:
-    print(inventory["message"])
-
-result = display_transaction_table()
-if "table" in result:
-    print(result["message"])
-    print(result["table"])
-else:
-    print(result["message"])
-
-shutdown_event()
+#item = Item.create_basic(item_name = "candy", price=0.99) 
+#item2 = Item.create_basic(item_name = "chips", price = 1.99)
+#
+#create_item(item2)
+#
+#
+#print(get_items())
+#
+#order(3, 30)
+#
+## Example usage:
+#inventory = display_inventory_table()
+#if "table" in inventory:
+#    print(inventory["message"])
+#    print(inventory["table"])
+#else:
+#    print(inventory["message"])
+#
+#result = display_transaction_table()
+#if "table" in result:
+#    print(result["message"])
+#    print(result["table"])
+#else:
+#    print(result["message"])
+#
+#shutdown_event()
