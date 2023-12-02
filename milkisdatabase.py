@@ -136,7 +136,7 @@ def exportjson():
         data.append(dict(zip([description[0] for description in cursor.description], row)))
 
     # Write the data to a JSON file
-    with open('inventory.json', 'w') as json_file:
+    with open('frontend/inventory.json', 'w') as json_file:
         json.dump(data, json_file, indent=2)
 
 
